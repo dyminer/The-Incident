@@ -4,11 +4,34 @@ A browser-based multiplayer party game for a house, Airbnb, or other local WiFi 
 
 ## Run it
 
+### Native Node.js
+
 1. Install Node.js 18 or newer on the host laptop.
 2. From this project folder, run `npm install`.
 3. Start the server with `npm start`.
 4. On the host laptop, open `http://localhost:3000` and create a room.
 5. Find the host laptop's WiFi IPv4 address (`ipconfig` on Windows; look for the WiFi adapter's IPv4 address). Other players on the same network open `http://HOST-IP:3000` and enter the four-letter room code.
+
+### Docker
+
+1. From this project folder, build the image: `docker build -t the-incident .`
+2. Run it with `docker run --rm -p 3000:3000 -e PORT=3000 the-incident`
+3. Or use Docker Compose: `docker compose up --build`
+4. Open `http://localhost:3000` on the host machine, or point players at your public IP / port-forwarded address.
+
+### Secure public access with Cloudflare Tunnel (recommended)
+
+This is the safest way to let players join from outside your local network without opening port `3000` directly on your router.
+
+1. Install the Cloudflare Tunnel CLI on the machine running Docker: `winget install --id=Cloudflare.cloudflared -e`
+2. Create a tunnel and a public hostname in Cloudflare Zero Trust.
+3. Copy `.env.example` to `.env` and set `CLOUDFLARE_TUNNEL_TOKEN`.
+4. Start the app and tunnel together: `docker compose -f docker-compose.public.yml up --build`
+5. Your players connect to the hostname you configured in Cloudflare, for example `https://incident.example.com`.
+
+This keeps the Node.js app private inside Docker while Cloudflare terminates TLS, verifies identity, and avoids exposing the app directly to the internet.
+
+To allow devices outside the local network to join, expose port `3000` on your router or use a tunnel/proxy such as Tailscale, ngrok, or a cloud VM with the same container port mapped. The app already binds to `0.0.0.0`, which is required for Docker and LAN access.
 
 The host laptop must stay awake and connected to WiFi for the game to run. If other devices cannot reach it, allow Node.js through the host operating system's private-network firewall. The server binds to `0.0.0.0` so it can accept connections from the local network.
 

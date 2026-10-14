@@ -1,0 +1,18 @@
+services:
+  app:
+    build:
+      context: .
+    container_name: the-incident-app
+    environment:
+      PORT: 3000
+    expose:
+      - "3000"
+    restart: unless-stopped
+
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    container_name: the-incident-tunnel
+    depends_on:
+      - app
+    restart: unless-stopped
+    command: tunnel --no-autoupdate run --token ${CLOUDFLARE_TUNNEL_TOKEN}
