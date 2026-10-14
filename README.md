@@ -19,9 +19,21 @@ A browser-based multiplayer party game for a house, Airbnb, or other local WiFi 
 3. Or use Docker Compose: `docker compose up --build`
 4. Open `http://localhost:3000` on the host machine, or point players at your public IP / port-forwarded address.
 
-### Secure public access with Cloudflare Tunnel (recommended)
+### Secure public access with a Cloudflare tunnel (recommended for a weekend event)
 
-This is the safest way to let players join from outside your local network without opening port `3000` directly on your router.
+This is the easiest way to let players join from outside your local network with a clickable link and without opening port `3000` directly on your router.
+
+#### Quickest no-domain option
+
+1. Install the Cloudflare Tunnel CLI on the host machine: `winget install --id=Cloudflare.cloudflared -e`
+2. Start the app on port `3000`.
+3. In a second terminal, run `cloudflared tunnel --url http://localhost:3000`.
+4. Cloudflare will print a public URL like `https://abc123xyz.trycloudflare.com`.
+5. Share that URL with your players. The tunnel stays open while the terminal remains running.
+
+This is the simplest public-link setup for a weekend game night, but the URL may change if you restart the tunnel.
+
+#### More stable option with a domain
 
 1. Install the Cloudflare Tunnel CLI on the machine running Docker: `winget install --id=Cloudflare.cloudflared -e`
 2. Create a tunnel and a public hostname in Cloudflare Zero Trust.
@@ -31,9 +43,30 @@ This is the safest way to let players join from outside your local network witho
 
 This keeps the Node.js app private inside Docker while Cloudflare terminates TLS, verifies identity, and avoids exposing the app directly to the internet.
 
-To allow devices outside the local network to join, expose port `3000` on your router or use a tunnel/proxy such as Tailscale, ngrok, or a cloud VM with the same container port mapped. The app already binds to `0.0.0.0`, which is required for Docker and LAN access.
+#### Restarting after a reboot
 
-The host laptop must stay awake and connected to WiFi for the game to run. If other devices cannot reach it, allow Node.js through the host operating system's private-network firewall. The server binds to `0.0.0.0` so it can accept connections from the local network.
+If you restart your desktop, start the app and tunnel again before sharing the link:
+
+```powershell
+cd C:\Main\The-Incident
+npm install
+npm start
+```
+
+Then, in a second terminal:
+
+```powershell
+cloudflared tunnel --url http://localhost:3000
+```
+
+Or with Docker:
+
+```powershell
+docker run -d --name the-incident -p 3000:3000 the-incident
+cloudflared tunnel --url http://localhost:3000
+```
+
+The host machine must stay awake and connected to the internet for the game to run. If other devices cannot reach it, allow Node.js through the host operating system's private-network firewall. The server binds to `0.0.0.0` so it can accept connections from the local network.
 
 No cloud hosting, database, account, external font, or internet service is needed.
 
